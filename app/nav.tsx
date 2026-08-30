@@ -59,7 +59,7 @@ export function SideNav({ userEmail }: { userEmail: string }) {
         <form action={logout}>
           <button
             type="submit"
-            className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[13px] text-brokenwhite/70 hover:bg-white/10 hover:text-brokenwhite"
+            className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[13px] font-medium text-red-400 hover:bg-red-500/15 hover:text-red-300"
           >
             <IconLogout />
             Keluar
@@ -96,7 +96,7 @@ export function TopNav({ userEmail }: { userEmail: string }) {
         <button
           type="submit"
           title={`Keluar (${userEmail})`}
-          className="rounded-lg px-2 py-1 text-[13px] text-brokenwhite/70 hover:text-brokenwhite"
+          className="rounded-lg px-2 py-1 text-[13px] text-red-400 hover:text-red-300"
         >
           <IconLogout />
         </button>
