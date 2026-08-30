@@ -1,20 +1,14 @@
 "use client";
 
 import { useActionState } from "react";
+import Image from "next/image";
 import Link from "next/link";
+// zeus88.png, sudah di-crop rapat (buang margin kosong) → zeus88-mark.png
+import logo from "@/app/logo/zeus88-mark.png";
 import { fieldCls, labelCls } from "@/app/ui";
 import type { AuthState } from "@/app/actions/auth";
 
 type Action = (prev: AuthState, formData: FormData) => Promise<AuthState>;
-
-function Wordmark({ className = "" }: { className?: string }) {
-  return (
-    <span className={`font-bold italic tracking-tight ${className}`}>
-      <span className="text-white">Zeus</span>
-      <span className="text-maroon-dim">88</span>
-    </span>
-  );
-}
 
 export function AuthForm({
   mode,
@@ -43,7 +37,14 @@ export function AuthForm({
           aria-hidden
           className="pointer-events-none absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-maroon/15 blur-3xl"
         />
-        <Wordmark className="relative text-[26px]" />
+        <Image
+          src={logo}
+          alt="Zeus88"
+          priority
+          width={164}
+          height={31}
+          className="relative"
+        />
         <div className="relative">
           <h2 className="text-[26px] font-semibold leading-tight tracking-tight">
             Lacak setiap lamaran
@@ -63,7 +64,7 @@ export function AuthForm({
       <main className="flex min-h-screen items-center justify-center px-4 py-10">
         <div className="w-full max-w-sm">
           <div className="mb-6 flex justify-center rounded-xl bg-sidebar px-6 py-5 lg:hidden">
-            <Wordmark className="text-[24px]" />
+            <Image src={logo} alt="Zeus88" priority width={138} height={26} />
           </div>
 
           <div className="rounded-xl border border-line bg-white p-6 shadow-[0_1px_3px_rgba(20,33,61,0.06)]">
@@ -124,6 +125,18 @@ export function AuthForm({
                   className={fieldCls}
                 />
               </div>
+
+              {!isRegister && (
+                <label className="flex cursor-pointer select-none items-center gap-2 text-[13px] text-navy-dim">
+                  <input
+                    type="checkbox"
+                    name="remember"
+                    defaultChecked
+                    className="h-3.5 w-3.5 accent-maroon"
+                  />
+                  Ingat saya di perangkat ini
+                </label>
+              )}
 
               {state.error && (
                 <p className="rounded-md bg-status-red/10 px-2.5 py-2 text-[13px] text-status-red">

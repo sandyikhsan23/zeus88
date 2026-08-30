@@ -18,7 +18,10 @@ export async function verifyPassword(pw: string, hash: string): Promise<boolean>
   return bcrypt.compare(pw, hash);
 }
 
-export async function createSession(userId: string): Promise<void> {
+export async function createSession(
+  userId: string,
+  remember = true,
+): Promise<void> {
   const token = await signSession(userId);
   const c = await cookies();
   c.set(SESSION_COOKIE, token, {
@@ -26,7 +29,8 @@ export async function createSession(userId: string): Promise<void> {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: SESSION_MAX_AGE,
+    // remember → cookie persisten 30 hari; kalau tidak → cookie sesi (hilang saat browser ditutup)
+    ...(remember ? { maxAge: SESSION_MAX_AGE } : {}),
   });
 }
 

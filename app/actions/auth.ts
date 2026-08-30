@@ -50,11 +50,13 @@ export async function login(
   const password = String(formData.get("password") ?? "");
   const next = safeNext(formData.get("next"));
 
+  const remember = formData.get("remember") != null;
+
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
     return { error: "Email atau password salah." };
   }
-  await createSession(user.id);
+  await createSession(user.id, remember);
   redirect(next);
 }
 
