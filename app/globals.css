@@ -1,26 +1,85 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+  Zeus88 design tokens.
+  Spec asks for tailwind.config.ts, but create-next-app now ships Tailwind v4
+  (CSS-first config). Same tokens, defined here via @theme — no config file needed.
+
+  Font: Montserrat (via next/font di layout.tsx, expose --font-montserrat),
+  fallback ke Helvetica system stack sebelum font termuat.
+
+  Palet (revisi): base PUTIH, aksen HIJAU, taskbar navy muda.
+  Catatan: nama token historis dipertahankan supaya tidak perlu rename di
+  belasan file — nilainya yang diubah:
+    --color-brokenwhite  = base putih
+    --color-maroon(/-dim) = aksen hijau (tombol utama, garis aktif, angka total)
+    --color-sidebar       = navy muda khusus taskbar kiri
+    --color-navy(/-dim)   = warna tinta teks (tetap gelap)
+*/
+@theme {
+  --color-brokenwhite: #ffffff;
+  --color-navy: #14213d;
+  --color-navy-dim: #4a5773;
+  --color-sidebar: #2c3c5e;
+  --color-maroon: #1c6e3d;
+  --color-maroon-dim: #4f9e6b;
+  --color-line: #e2e2e6;
+  /* permukaan "cekung": kolom kanban, header tabel, panel sekunder */
+  --color-sink: #f3f4f6;
+
+  /* low-saturation semantic status colors */
+  --color-status-slate: #5b6472;
+  --color-status-blue: #3f5a8a;
+  --color-status-amber: #9a7b3c;
+  --color-status-green: #2f6b49;
+  --color-status-red: #8a3a3f;
+
+  --font-sans: var(--font-montserrat), -apple-system, "Helvetica Neue", Helvetica,
+    Arial, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  font-size: 14px;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-brokenwhite);
+  color: var(--color-navy);
+  font-family: var(--font-sans);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+  color: inherit;
+}
+
+a,
+button,
+input,
+select,
+textarea {
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+
+/* scrollbar tipis untuk area scroll horizontal (kanban) */
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
+}
+.thin-scroll::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: 4px;
 }

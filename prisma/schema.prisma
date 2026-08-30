@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+  // "native" untuk dev lokal; target rhel untuk deploy di Vercel/Netlify/serverless.
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+// PostgreSQL.
+//   DATABASE_URL : koneksi pooled (Neon/Supabase) — dipakai aplikasi saat runtime
+//   DIRECT_URL   : koneksi langsung (tanpa pooler) — dipakai saat migrate/introspect.
+//                  Kalau host-mu tidak pakai pooler, isi sama dengan DATABASE_URL.
+//
+// Dev lokal tanpa Postgres? ganti provider ke "sqlite", hapus directUrl,
+// set DATABASE_URL="file:./dev.db", lalu `npx prisma migrate dev`.
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  nama         String?
+  createdAt    DateTime  @default(now())
+  lamaran      Lamaran[]
+  dokumen      Dokumen[]
+}
+
+model Lamaran {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  perusahaan    String
+  posisi        String
+  tanggalMelamar DateTime
+  sumberLowongan String?
+  status        String   // lihat daftar status di bawah
+  updateTerakhir DateTime
+  kontakHrd     String?
+  linkLowongan  String?
+  gajiHarapan   String?
+  catatan       String?
+  dokumen       Dokumen[] @relation("LamaranDokumen")
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Dokumen {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nama      String
+  kategori  String    // CV/Resume, Surat Lamaran, Portofolio, Sertifikat, Transkrip/Ijazah, KTP/Identitas, Lainnya
+  link      String?   // URL ke Google Drive/Dropbox, dsb — bukan upload file
+  catatan   String?
+  lamaran   Lamaran[] @relation("LamaranDokumen")
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}

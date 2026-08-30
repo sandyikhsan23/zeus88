@@ -1,0 +1,14 @@
+import type { Metadata } from "next";
+import { login } from "@/app/actions/auth";
+import { AuthForm } from "@/app/auth-form";
+
+export const metadata: Metadata = { title: "Masuk · Zeus88" };
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  return <AuthForm mode="login" action={login} next={next} />;
+}
