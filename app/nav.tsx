@@ -49,7 +49,7 @@ export function SideNav({ userEmail }: { userEmail: string }) {
         })}
       </nav>
 
-      <div className="mt-auto border-t border-white/10 p-2">
+      <div className="mt-auto border-t border-white/10 p-2 pb-3">
         <div
           className="truncate px-2.5 pb-1 text-[11px] text-brokenwhite/45"
           title={userEmail}

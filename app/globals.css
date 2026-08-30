@@ -51,23 +51,18 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-input,
-select,
-textarea,
-button {
-  font: inherit;
-  color: inherit;
-}
-
-a,
-button,
-input,
-select,
-textarea {
-  transition:
-    background-color 0.12s ease,
-    border-color 0.12s ease,
-    color 0.12s ease;
+/* base sengaja di-@layer supaya utility Tailwind (text-*, bg-*) tetap menang */
+@layer base {
+  a,
+  button,
+  input,
+  select,
+  textarea {
+    transition:
+      background-color 0.12s ease,
+      border-color 0.12s ease,
+      color 0.12s ease;
+  }
 }
 
 /* scrollbar tipis untuk area scroll horizontal (kanban) */
