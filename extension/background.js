@@ -348,7 +348,8 @@ async function saveJob() {
     posisi: data.posisi,
     linkLowongan: data.linkLowongan,
     catatan: data.catatan,
-    gajiHarapan: data.gajiHarapan,
+    // gaji tidak tertera di web → pakai default ekspektasi
+    gajiHarapan: data.gajiHarapan || "5-8 jt",
     sumberLowongan: data._sumber,
   };
 

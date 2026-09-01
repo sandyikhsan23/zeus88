@@ -25,7 +25,7 @@ chrome.runtime.sendMessage({ type: "preview" }, (r) => {
   $("preview").innerHTML =
     row("Posisi", d.posisi || "—") +
     row("Perusahaan", d.perusahaan || "—") +
-    row("Gaji", d.gajiHarapan, true) +
+    row("Gaji harapan", d.gajiHarapan || "tidak tertera → 5-8 jt", true) +
     row("Sumber", d._sumber || d._host, true) +
     (catatan
       ? `<div class="row"><div class="label">Catatan</div><div class="note">${esc(
