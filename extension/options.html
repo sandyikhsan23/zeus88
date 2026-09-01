@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <title>Zeus88 — Pengaturan</title>
+    <style>
+      body {
+        font: 14px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif;
+        color: #14213d;
+        max-width: 440px;
+        margin: 40px auto;
+        padding: 0 20px;
+      }
+      h2 { font-style: italic; letter-spacing: -0.02em; }
+      h2 b { color: #1c6e3d; }
+      label { display: block; margin: 16px 0 4px; font-size: 13px; color: #4a5773; }
+      input {
+        width: 100%;
+        padding: 9px 10px;
+        border: 1px solid #e2e2e6;
+        border-radius: 8px;
+        font: inherit;
+      }
+      button {
+        margin-top: 12px;
+        padding: 9px 18px;
+        border: 0;
+        border-radius: 8px;
+        background: #1c6e3d;
+        color: #fff;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .ok { margin-left: 10px; color: #1c6e3d; font-size: 13px; }
+      p { font-size: 12.5px; color: #4a5773; }
+    </style>
+  </head>
+  <body>
+    <h2>Zeus<b>88</b></h2>
+    <label for="url">URL Zeus88 kamu</label>
+    <input id="url" type="url" placeholder="https://zeus88-xxxx.vercel.app" />
+    <div>
+      <button id="save">Simpan</button><span id="ok" class="ok"></span>
+    </div>
+    <p>
+      Pastikan kamu sudah <b>login</b> di URL tersebut pada browser yang sama —
+      extension memakai sesi login itu untuk menyimpan lowongan.
+    </p>
+    <script src="options.js"></script>
+  </body>
+</html>

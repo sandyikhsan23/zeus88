@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Zeus88 — Simpan Lowongan",
+  "version": "1.0.0",
+  "description": "Simpan lowongan yang sedang kamu buka ke Zeus88 dengan satu klik.",
+  "permissions": ["activeTab", "scripting", "cookies", "storage"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Simpan ke Zeus88"
+  },
+  "options_page": "options.html",
+  "background": { "service_worker": "background.js" },
+  "icons": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" }
+}

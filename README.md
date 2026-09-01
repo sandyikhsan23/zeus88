@@ -51,6 +51,17 @@ Script: `npm run build`, `db:studio`, `db:migrate`, `db:deploy` (migrate saat pr
 Catatan: jika di depan reverse proxy dengan domain berbeda, set
 `serverActions.allowedOrigins` di `next.config.ts`.
 
+## Browser extension — "Simpan Lowongan"
+
+`extension/` — extension Chrome/Edge (Manifest V3) untuk menyimpan lowongan yang
+sedang dibuka ke Zeus88 dengan satu klik. Baca `JobPosting` schema.org di halaman,
+kirim ke `POST /api/lamaran` pakai sesi login yang sudah ada (cookie `zeus88_session`
+dibaca via `chrome.cookies`, dikirim sebagai `Authorization: Bearer`). Setup di
+`extension/README.md`.
+
+`POST /api/lamaran` menerima `{ perusahaan, posisi, linkLowongan, catatan, sumberLowongan, gajiHarapan }`,
+membuat Lamaran berstatus "Belum Dikirim", dedup berdasarkan `linkLowongan`.
+
 ## Auth — cara kerja
 
 - `lib/session.ts` — sign/verify JWT (edge-safe, dipakai `proxy.ts` + `lib/auth.ts`).
