@@ -10,26 +10,29 @@ async function getSessionToken(base) {
   return cookie && cookie.value ? cookie.value : null;
 }
 
-// ── Ekstraksi data lowongan dari halaman ────────────────────────────
-// Di-inject ke tab aktif. Prioritas: JSON-LD JobPosting → fallback OG/meta.
+// ── Ekstraksi data lowongan dari halaman ─────────────────────────────────────
+// Di-inject ke tab aktif. Prioritas: JSON-LD JobPosting → microdata → OG/meta/DOM.
 function extractJobFromPage() {
-  const strip = (v) => {
-    if (v == null) return undefined;
-    let t = String(
-      typeof v === "object" ? v.name || v["@value"] || v.legalName || "" : v,
-    );
-    t = t
+  const clean = (v) =>
+    String(v == null ? "" : v)
       .replace(/<[^>]*>/g, " ")
-      .replace(/&nbsp;/g, " ")
+      .replace(/&nbsp;|&#160;/g, " ")
+      .replace(/&amp;/g, "&")
       .replace(/\s+/g, " ")
       .trim();
-    return t || undefined;
-  };
+
   const meta = (sel) =>
     document
       .querySelector(`meta[property="${sel}"],meta[name="${sel}"]`)
-      ?.content?.trim() || undefined;
+      ?.content?.trim() || "";
 
+  const htmlToNode = (html) => {
+    const d = document.createElement("div");
+    d.innerHTML = String(html || "");
+    return d;
+  };
+
+  // ── cari node JobPosting di semua <script type=ld+json> ──
   let job = null;
   for (const sc of document.querySelectorAll(
     'script[type="application/ld+json"]',
@@ -40,9 +43,12 @@ function extractJobFromPage() {
     } catch {
       continue;
     }
-    const list = Array.isArray(data) ? data : data["@graph"] || [data];
-    for (const n of list) {
-      const ty = n && n["@type"];
+    const stack = Array.isArray(data) ? [...data] : [data];
+    while (stack.length) {
+      const n = stack.shift();
+      if (!n || typeof n !== "object") continue;
+      if (Array.isArray(n["@graph"])) stack.push(...n["@graph"]);
+      const ty = n["@type"];
       if (ty === "JobPosting" || (Array.isArray(ty) && ty.includes("JobPosting"))) {
         job = n;
         break;
@@ -51,56 +57,163 @@ function extractJobFromPage() {
     if (job) break;
   }
 
-  const out = { linkLowongan: location.href };
+  const orgName = (h) => {
+    if (!h) return "";
+    if (typeof h === "string") return clean(h);
+    if (Array.isArray(h)) return orgName(h[0]);
+    return clean(h.name || h.legalName || h["@name"] || "");
+  };
+
+  const titleOf = (t) => {
+    if (!t) return "";
+    if (typeof t === "object") return clean(t["@value"] || t.name || "");
+    return clean(t);
+  };
+
+  const salaryOf = (bs) => {
+    if (!bs) return "";
+    const cur = clean(bs.currency || bs.salaryCurrency || "");
+    const v = bs.value || bs;
+    if (!v || typeof v !== "object") return "";
+    const unit = String(v.unitText || "").toLowerCase();
+    const unitId =
+      { hour: "jam", day: "hari", week: "minggu", month: "bulan", year: "tahun" }[
+        unit
+      ] || (unit || "");
+    const fmt = (n) => {
+      const num = Number(String(n).replace(/[^\d.]/g, ""));
+      return isFinite(num) && num > 0 ? num.toLocaleString("id-ID") : String(n);
+    };
+    let amt = "";
+    if (v.minValue && v.maxValue) amt = `${fmt(v.minValue)} – ${fmt(v.maxValue)}`;
+    else if (v.value) amt = fmt(v.value);
+    else if (v.minValue) amt = `min ${fmt(v.minValue)}`;
+    else if (v.maxValue) amt = `maks ${fmt(v.maxValue)}`;
+    if (!amt) return "";
+    return [cur, amt, unitId ? "/ " + unitId : ""].filter(Boolean).join(" ");
+  };
+
+  const locationOf = (job) => {
+    if (job.jobLocationType === "TELECOMMUTE") return "Remote";
+    const loc = Array.isArray(job.jobLocation) ? job.jobLocation[0] : job.jobLocation;
+    const a = loc && loc.address;
+    if (a && typeof a === "object")
+      return clean(
+        [a.addressLocality, a.addressRegion, a.addressCountry]
+          .filter(Boolean)
+          .join(", "),
+      );
+    if (typeof loc === "string") return clean(loc);
+    if (job.applicantLocationRequirements)
+      return orgName(job.applicantLocationRequirements) + " (remote)";
+    return "";
+  };
+
+  // ── kualifikasi dari HTML deskripsi ──
+  const KW =
+    /(kualifikasi|persyaratan|requirements?|qualifications?|what (you.?ll need|we.?re looking for)|yang (kami cari|dibutuhkan|diharapkan)|kriteria|minimum qualifications|nice to have|preferred)/i;
+
+  const qualificationsOf = (descHtml) => {
+    if (!descHtml) return "";
+    const root = htmlToNode(descHtml);
+
+    // 1) cari heading/strong yang cocok KW, ambil isi setelahnya
+    const cand = root.querySelectorAll("h1,h2,h3,h4,h5,h6,strong,b,p,li,div");
+    for (const el of cand) {
+      const t = clean(el.textContent);
+      if (!t || t.length > 90 || !KW.test(t)) continue;
+      const parts = [];
+      const isHeading = /^H[1-6]$/.test(el.tagName);
+      let node = isHeading ? el.nextElementSibling : el.nextElementSibling;
+      // kalau strong/b di dalam <p>/<li>, lanjut dari parent-nya
+      if (!node && el.parentElement) node = el.parentElement.nextElementSibling;
+      let steps = 0;
+      while (node && steps < 20) {
+        if (/^H[1-6]$/.test(node.tagName)) break;
+        const nt = clean(node.textContent);
+        if (nt) {
+          if (node.tagName === "UL" || node.tagName === "OL") {
+            for (const li of node.querySelectorAll("li")) {
+              const x = clean(li.textContent);
+              if (x) parts.push("• " + x);
+            }
+          } else {
+            parts.push(nt);
+          }
+        }
+        if (parts.join("\n").length > 1600) break;
+        node = node.nextElementSibling;
+        steps++;
+      }
+      if (parts.length) return (t + "\n" + parts.join("\n")).slice(0, 1800);
+    }
+
+    // 2) fallback: kalau deskripsi banyak bullet, ambil semua
+    const lis = [...root.querySelectorAll("li")]
+      .map((li) => clean(li.textContent))
+      .filter((x) => x && x.length < 400);
+    if (lis.length >= 3)
+      return lis.map((x) => "• " + x).join("\n").slice(0, 1800);
+
+    // 3) fallback terakhir: seluruh deskripsi
+    return clean(root.textContent).slice(0, 1500);
+  };
+
+  // ── susun hasil ──
+  const out = {
+    linkLowongan: location.href,
+    posisi: "",
+    perusahaan: "",
+    gajiHarapan: "",
+    catatan: "",
+    _found: "none",
+  };
 
   if (job) {
-    out.posisi = strip(job.title);
-    out.perusahaan = strip(job.hiringOrganization);
-    if (typeof job.url === "string") out.linkLowongan = job.url;
+    out._found = "json-ld";
+    out.posisi = titleOf(job.title);
+    out.perusahaan = orgName(job.hiringOrganization) || orgName(job.author);
+    if (typeof job.url === "string" && /^https?:/.test(job.url))
+      out.linkLowongan = job.url;
+    out.gajiHarapan = salaryOf(job.baseSalary) || salaryOf(job.estimatedSalary);
 
-    const bits = [];
-    const loc = Array.isArray(job.jobLocation) ? job.jobLocation[0] : job.jobLocation;
-    const addr = loc && loc.address;
-    if (addr && typeof addr === "object") {
-      const parts = [addr.addressLocality, addr.addressRegion, addr.addressCountry]
-        .map(strip)
-        .filter(Boolean);
-      if (parts.length) bits.push("Lokasi: " + parts.join(", "));
-    } else if (job.jobLocationType === "TELECOMMUTE") {
-      bits.push("Lokasi: Remote");
-    }
+    const head = [];
+    const loc = locationOf(job);
+    if (loc) head.push("Lokasi: " + loc);
     if (job.employmentType)
-      bits.push("Tipe: " + strip([].concat(job.employmentType).join(", ")));
+      head.push("Tipe: " + clean([].concat(job.employmentType).join(", ")));
+    if (job.datePosted)
+      head.push("Diposting: " + String(job.datePosted).slice(0, 10));
 
-    const bs = job.baseSalary;
-    const val = bs && (bs.value || bs);
-    if (val && (val.minValue || val.maxValue || val.value)) {
-      const amount =
-        val.minValue && val.maxValue
-          ? `${val.minValue}–${val.maxValue}`
-          : val.value || val.minValue || val.maxValue;
-      bits.push(
-        `Gaji (dari lowongan): ${amount} ${bs.currency || ""} ${
-          val.unitText ? "/ " + String(val.unitText).toLowerCase() : ""
-        }`.replace(/\s+/g, " ").trim(),
-      );
-    }
-    if (job.datePosted) bits.push("Diposting: " + String(job.datePosted).slice(0, 10));
-    if (job.validThrough)
-      bits.push("Berlaku s/d: " + String(job.validThrough).slice(0, 10));
+    const qual = qualificationsOf(job.description);
+    out.catatan = [head.join("\n"), qual].filter(Boolean).join("\n\n").trim();
+  }
 
-    const desc = strip(job.description);
-    if (desc) bits.push("\n" + desc.slice(0, 800));
-
-    out.catatan = bits.join("\n").trim() || undefined;
-  } else {
-    out.posisi =
-      meta("og:title") ||
-      document.querySelector("h1")?.textContent?.trim() ||
-      document.title;
-    out.perusahaan = meta("og:site_name");
+  // ── fallback / lengkapi yang kosong dari DOM & meta ──
+  if (!out.posisi) {
+    let t = meta("og:title") || document.querySelector("h1")?.textContent || "";
+    t = clean(t)
+      .replace(/\s*[|\-–—]\s*(LinkedIn|Glassdoor|Indeed|Glints|Jobstreet|Kalibrr).*$/i, "")
+      .replace(/\s+hiring\s+.*$/i, "");
+    // pola LinkedIn: "Company hiring Title in Location"
+    const m = clean(meta("og:title")).match(/hiring\s+(.+?)\s+in\s+/i);
+    if (m) t = m[1];
+    out.posisi = t || document.title;
+  }
+  if (!out.perusahaan) {
+    const og = clean(meta("og:title"));
+    const m =
+      og.match(/^(.+?)\s+hiring\s+/i) ||
+      og.match(/\bat\s+([A-Z][\w .&'-]{1,50})$/);
+    out.perusahaan =
+      (m && clean(m[1])) ||
+      clean(meta("og:site_name")) ||
+      clean(document.querySelector('[class*="company" i] a, [class*="employer" i]')?.textContent) ||
+      location.hostname.replace(/^www\./, "");
+  }
+  if (!out.catatan) {
     const d = meta("og:description") || meta("description");
-    if (d) out.catatan = d.slice(0, 800);
+    if (d) out.catatan = clean(d).slice(0, 800);
   }
 
   return out;
@@ -168,6 +281,7 @@ async function saveJob() {
     posisi: data.posisi,
     linkLowongan: data.linkLowongan,
     catatan: data.catatan,
+    gajiHarapan: data.gajiHarapan,
     sumberLowongan: data._sumber,
   };
 
@@ -181,7 +295,7 @@ async function saveJob() {
       },
       body: JSON.stringify(payload),
     });
-  } catch (e) {
+  } catch {
     return { ok: false, error: "Tidak bisa menghubungi Zeus88 (" + base + ")." };
   }
 

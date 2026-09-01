@@ -5,6 +5,13 @@ const esc = (s) =>
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
   );
 
+function row(label, value, dim) {
+  if (!value) return "";
+  return `<div class="row"><div class="label">${esc(label)}</div><div class="val${
+    dim ? " dim" : ""
+  }">${esc(value)}</div></div>`;
+}
+
 chrome.runtime.sendMessage({ type: "preview" }, (r) => {
   if (!r || !r.ok) {
     $("preview").innerHTML = `<div class="msg err">${esc(
@@ -14,16 +21,20 @@ chrome.runtime.sendMessage({ type: "preview" }, (r) => {
     return;
   }
   const d = r.data;
-  $("preview").innerHTML = `
-    <div class="row"><div class="label">Posisi</div><div class="val">${esc(
-      d.posisi || "—",
-    )}</div></div>
-    <div class="row"><div class="label">Perusahaan</div><div class="val">${esc(
-      d.perusahaan || "—",
-    )}</div></div>
-    <div class="row"><div class="label">Sumber</div><div class="val dim">${esc(
-      d._sumber || d._host || "",
-    )}</div></div>`;
+  const catatan = (d.catatan || "").slice(0, 220);
+  $("preview").innerHTML =
+    row("Posisi", d.posisi || "—") +
+    row("Perusahaan", d.perusahaan || "—") +
+    row("Gaji", d.gajiHarapan, true) +
+    row("Sumber", d._sumber || d._host, true) +
+    (catatan
+      ? `<div class="row"><div class="label">Catatan</div><div class="note">${esc(
+          catatan,
+        )}${d.catatan.length > 220 ? "…" : ""}</div></div>`
+      : "") +
+    (d._found === "none"
+      ? `<div class="msg warn">Halaman ini tidak punya data lowongan terstruktur — hasil mungkin kurang rapi, edit lagi di Zeus88.</div>`
+      : "");
 });
 
 $("save").addEventListener("click", () => {
