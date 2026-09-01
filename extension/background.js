@@ -134,7 +134,6 @@ function extractJobFromPage() {
       head.push("Lokasi: " + clean([a.addressLocality, a.addressRegion, a.addressCountry].filter(Boolean).join(", ")));
     else if (typeof loc === "string") head.push("Lokasi: " + clean(loc));
     if (job.employmentType) head.push("Tipe: " + clean([].concat(job.employmentType).join(", ")));
-    if (job.datePosted) head.push("Diposting: " + String(job.datePosted).slice(0, 10));
     out.catatan = [head.join("\n"), qualificationsOf(job.description)].filter(Boolean).join("\n\n").trim();
   }
 
@@ -261,9 +260,6 @@ function extractJobFromPage() {
       const wt = getK(j, /^(workTypes?|employmentType|workType)(\(|$)/i);
       const wtStr = label(wt, resolve);
       if (wtStr) head.push("Tipe: " + wtStr);
-      const posted = getK(j, /^(listedAt|datePosted|postedAt|createdAt)(\(|$)/i);
-      const postedStr = label(posted, resolve);
-      if (postedStr) head.push("Diposting: " + postedStr);
 
       const qual = descHtml ? qualificationsOf(descHtml) : "";
       const built = [head.join("\n"), qual].filter(Boolean).join("\n\n").trim();
