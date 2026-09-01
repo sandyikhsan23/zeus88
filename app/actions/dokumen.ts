@@ -42,7 +42,7 @@ export async function createDokumen(formData: FormData) {
     data: { ...d, userId: user.id },
   });
   revalidatePath("/dokumen");
-  redirect(`/dokumen/${created.id}`);
+  redirect(`/dokumen/${created.id}?saved=baru`);
 }
 
 export async function updateDokumen(id: string, formData: FormData) {
@@ -53,7 +53,7 @@ export async function updateDokumen(id: string, formData: FormData) {
   await prisma.dokumen.update({ where: { id }, data: d });
   revalidatePath("/dokumen");
   revalidatePath(`/dokumen/${id}`);
-  redirect(`/dokumen/${id}`);
+  redirect(`/dokumen/${id}?saved=update`);
 }
 
 export async function deleteDokumen(id: string) {
@@ -67,5 +67,5 @@ export async function deleteDokumen(id: string) {
   await prisma.dokumen.delete({ where: { id } });
   revalidatePath("/dokumen");
   revalidatePath("/lamaran");
-  redirect("/dokumen");
+  redirect("/dokumen?saved=hapus");
 }

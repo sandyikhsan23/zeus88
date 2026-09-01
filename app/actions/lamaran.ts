@@ -85,7 +85,7 @@ export async function createLamaran(formData: FormData) {
   });
   revalidatePath("/");
   revalidatePath("/lamaran");
-  redirect(`/lamaran/${created.id}`);
+  redirect(`/lamaran/${created.id}?saved=baru`);
 }
 
 export async function updateLamaran(id: string, formData: FormData) {
@@ -118,7 +118,7 @@ export async function updateLamaran(id: string, formData: FormData) {
   revalidatePath("/");
   revalidatePath("/lamaran");
   revalidatePath(`/lamaran/${id}`);
-  redirect(`/lamaran/${id}`);
+  redirect(`/lamaran/${id}?saved=update`);
 }
 
 // Dipakai oleh kanban board — hanya mengubah status + updateTerakhir.
@@ -138,5 +138,5 @@ export async function deleteLamaran(id: string) {
   await prisma.lamaran.deleteMany({ where: { id, userId: user.id } });
   revalidatePath("/");
   revalidatePath("/lamaran");
-  redirect("/lamaran");
+  redirect("/lamaran?saved=hapus");
 }
