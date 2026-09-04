@@ -35,7 +35,11 @@ export function Toast() {
   if (!msg) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-lg border border-maroon/25 bg-white px-3.5 py-2.5 text-sm font-medium text-maroon shadow-[0_4px_16px_rgba(20,33,61,0.15)]">
+    <div
+      role="status"
+      style={{ animation: "toast-in 0.2s ease-out" }}
+      className="fixed left-1/2 top-6 z-50 flex -translate-x-1/2 items-center gap-2 rounded-lg border border-maroon/25 bg-white px-4 py-2.5 text-sm font-medium text-maroon shadow-[0_8px_28px_rgba(20,33,61,0.18)]"
+    >
       <svg
         width="15"
         height="15"

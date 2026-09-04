@@ -65,6 +65,18 @@ body {
   }
 }
 
+/* toast sukses (app/(app)/toast.tsx) — muncul dari atas, rata tengah */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
 /* scrollbar tipis untuk area scroll horizontal (kanban) */
 .thin-scroll {
   scrollbar-width: thin;
